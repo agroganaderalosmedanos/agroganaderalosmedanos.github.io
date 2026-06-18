@@ -12,8 +12,8 @@
   --clay: #a8512f; --clay-dark: #7a3a20; --clay-bg: #f6e8e0; --clay-text: #7a3a20;
   --gold: #b8860b; --gold-dark: #8a6508; --gold-bg: #f5edd8; --gold-text: #8a6508;
   --radius: 10px; --radius-lg: 18px;
-  --serif: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
-  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --serif: 'Aptos', 'Calibri', 'Segoe UI', -apple-system, sans-serif;
+  --sans: 'Aptos', 'Calibri', 'Segoe UI', -apple-system, sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -40,7 +40,7 @@ body {
 .stage {
   position: relative; z-index: 1; flex: 1;
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 26px 22px 24px; text-align: center; text-decoration: none; color: inherit;
+  padding: 20px 18px 18px; text-align: center; text-decoration: none; color: inherit;
   display: flex; flex-direction: column; align-items: center;
   opacity: 0; transform: translateY(10px);
   animation: rise .5s ease forwards;
@@ -58,17 +58,17 @@ a.stage:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(43,38,
 a.stage:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 .stage-icon {
-  width: 64px; height: 64px; border-radius: 50%; background: var(--bg);
-  display: flex; align-items: center; justify-content: center; font-size: 27px;
-  margin-bottom: 14px; border: 2px solid var(--border2);
+  width: 54px; height: 54px; border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; font-size: 23px;
+  margin-bottom: 11px; border: 2px solid var(--border2);
 }
 .s-cria .stage-icon { border-color: var(--green); }
 .s-recria .stage-icon { border-color: var(--clay); }
 .s-engorde .stage-icon { border-color: var(--gold); }
 
 .stage-age { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); font-weight: 600; margin-bottom: 6px; }
-.stage-name { font-family: var(--serif); font-size: 21px; font-weight: 700; }
-.stage-desc { font-size: 12.5px; color: var(--text2); line-height: 1.5; margin: 10px 0 18px; min-height: 38px; }
+.stage-name { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+.stage-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin: 8px 0 14px; min-height: 34px; }
 
 .stage-cta {
   font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px;
