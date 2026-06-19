@@ -91,10 +91,50 @@ footer { text-align: center; margin-top: 44px; font-size: 11.5px; letter-spacing
   .arrow { transform: rotate(90deg); margin: -4px 0; }
   .farm-name { font-size: 27px; }
 }
+
+/* ── LOGIN ──────────────────────────────────────────────────────── */
+.login-overlay {
+  position: fixed; inset: 0; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; font-family: var(--sans);
+}
+.login-box {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 18px; padding: 40px 36px; width: 100%; max-width: 380px;
+  box-shadow: 0 8px 32px rgba(43,38,31,0.10);
+}
+.login-icon { font-size: 32px; margin-bottom: 10px; }
+.login-title { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+.login-field { margin-bottom: 14px; }
+.login-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.login-field input {
+  width: 100%; padding: 10px 13px; border: 1px solid var(--border2);
+  border-radius: 9px; font-size: 14px; font-family: var(--sans);
+  background: var(--bg2); color: var(--text); outline: none;
+  transition: border-color .15s;
+}
+.login-field input:focus { border-color: var(--green); background: var(--bg); }
+.login-btn {
+  width: 100%; padding: 11px; background: var(--green); color: #fff;
+  border: none; border-radius: 9px; font-size: 14px; font-weight: 700;
+  font-family: var(--sans); cursor: pointer; margin-top: 6px;
+  transition: background .15s;
+}
+.login-btn:hover { background: var(--green-dark); }
+.login-btn:disabled { opacity: .6; cursor: default; }
+.login-error { font-size: 12.5px; color: #b3261e; margin-top: 10px; text-align: center; min-height: 18px; }
+.login-user-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #a39a89; padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+  cursor: pointer; transition: all .15s; margin-top: 10px;
+}
+.login-user-badge:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
 </style>
 </head>
 <body>
-<div class="shell">
+<div class="shell" id="main-shell" style="display:none">
 
   <div class="hero">
     <div class="hero-icon">🐄</div>
@@ -135,5 +175,84 @@ footer { text-align: center; margin-top: 44px; font-size: 11.5px; letter-spacing
   <footer>El Cencerro · El Misterio · El Clavo Chico</footer>
 
 </div>
+
+<script>
+
+const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbz-ahGdifI9FykD0r6hz47fjPZ6H5TwKWMOsCfW5f_M41oXneTffMk7CKz0svOgezSD_w/exec';
+const LOGIN_TOKEN   = 'LosMedanos2026Cria';
+
+function loginGetSession() {
+  try { return JSON.parse(localStorage.getItem('lm_session') || 'null'); } catch(e) { return null; }
+}
+function loginSetSession(data) { localStorage.setItem('lm_session', JSON.stringify(data)); }
+function loginClear() { localStorage.removeItem('lm_session'); location.reload(); }
+
+function loginRequired(onSuccess) {
+  const session = loginGetSession();
+  if (session) { onSuccess(session); return; }
+  showLoginScreen(onSuccess);
+}
+
+function showLoginScreen(onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'login-overlay';
+  overlay.innerHTML = `
+    <div class="login-box">
+      <div class="login-icon">🐄</div>
+      <div class="login-title">Agroganadera Los Médanos</div>
+      <div class="login-sub">Ingresá tus credenciales para continuar</div>
+      <div class="login-field"><label>Usuario</label>
+        <input type="text" id="li-user" placeholder="tu usuario" autocomplete="username">
+      </div>
+      <div class="login-field"><label>Contraseña</label>
+        <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="login-btn" id="li-btn">Ingresar</button>
+      <div class="login-error" id="li-err"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const btn = document.getElementById('li-btn');
+  const userEl = document.getElementById('li-user');
+  const passEl = document.getElementById('li-pass');
+  const errEl  = document.getElementById('li-err');
+  async function doLogin() {
+    const usuario = userEl.value.trim();
+    const password = passEl.value;
+    if (!usuario || !password) { errEl.textContent = 'Completá usuario y contraseña.'; return; }
+    btn.disabled = true; btn.textContent = 'Verificando…'; errEl.textContent = '';
+    try {
+      const url = LOGIN_API_URL + '?action=login&token=' + encodeURIComponent(LOGIN_TOKEN);
+      const res = await fetch(url, { method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ usuario, password }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Error al conectar');
+      loginSetSession(json.data);
+      overlay.remove();
+      onSuccess(json.data);
+    } catch(err) {
+      errEl.textContent = err.message;
+      btn.disabled = false; btn.textContent = 'Ingresar';
+    }
+  }
+  btn.onclick = doLogin;
+  passEl.onkeydown = e => { if (e.key === 'Enter') doLogin(); };
+  userEl.onkeydown = e => { if (e.key === 'Enter') passEl.focus(); };
+  setTimeout(() => userEl.focus(), 100);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  loginRequired(session => {
+    window.__lmSession = session;
+    const shell = document.getElementById('main-shell');
+    if (shell) shell.style.display = '';
+    // Badge de usuario en el footer
+    const footer = document.querySelector('footer');
+    if (footer && !footer.querySelector('.login-user-badge')) {
+      footer.insertAdjacentHTML('beforeend',
+        '<div style="margin-top:10px"><span class="login-user-badge" onclick="loginClear()">👤 ' + session.nombre + ' &nbsp;·&nbsp; Cerrar sesión</span></div>');
+    }
+  });
+});
+</script>
 </body>
 </html>
