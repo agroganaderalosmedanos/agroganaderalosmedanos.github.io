@@ -1,398 +1,258 @@
-/**
- * =====================================================================
- * GANADERÍA LOS MÉDANOS — API BACKEND (Apps Script Web App)
- * =====================================================================
- */
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agroganadera Los Médanos — Sistema de Gestión</title>
+<style>
+:root {
+  --bg: #faf8f4; --bg2: #f3efe6; --bg3: #ece5d6;
+  --text: #2b261f; --text2: #6b6357; --text3: #a39a89;
+  --border: rgba(43,38,31,0.1); --border2: rgba(43,38,31,0.18);
+  --green: #2f6b3f; --green-dark: #1f4d2b; --green-bg: #e6efe3; --green-text: #1f4d2b;
+  --clay: #a8512f; --clay-dark: #7a3a20; --clay-bg: #f6e8e0; --clay-text: #7a3a20;
+  --gold: #b8860b; --gold-dark: #8a6508; --gold-bg: #f5edd8; --gold-text: #8a6508;
+  --radius: 10px; --radius-lg: 18px;
+  --serif: 'Aptos', 'Calibri', 'Segoe UI', -apple-system, sans-serif;
+  --sans: 'Aptos', 'Calibri', 'Segoe UI', -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans); background: var(--bg3); color: var(--text);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.shell { max-width: 940px; width: 100%; }
 
-// ── CONFIG ────────────────────────────────────────────────────────────────
-const API_TOKEN = 'LosMedanos2026Cria';
+.hero { text-align: center; margin-bottom: 56px; }
+.hero-icon {
+  width: 56px; height: 56px; margin: 0 auto 18px; border-radius: 14px;
+  background: var(--green-dark); color: #fff; font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+}
+.farm-name { font-family: var(--serif); font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
+.subtitle { color: var(--text2); font-size: 14.5px; margin-top: 8px; }
 
-// ── ENTRY POINTS ─────────────────────────────────────────────────────────
-function doGet(e) { return handleRequest(e); }
-function doPost(e) { return handleRequest(e); }
+.cycle { position: relative; display: flex; gap: 22px; align-items: stretch; }
+.cycle::before {
+  content: ''; position: absolute; top: 34px; left: 64px; right: 64px; height: 0;
+  border-top: 2px dashed var(--border2); z-index: 0;
+}
+.stage {
+  position: relative; z-index: 1; flex: 1;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 20px 18px 18px; text-align: center; text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; align-items: center;
+  opacity: 0; transform: translateY(10px);
+  animation: rise .5s ease forwards;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.stage:nth-child(1) { animation-delay: .05s; }
+.stage:nth-child(3) { animation-delay: .15s; }
+.stage:nth-child(5) { animation-delay: .25s; }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .stage { animation: none; opacity: 1; transform: none; }
+}
 
-function handleRequest(e) {
-  try {
-    const params = e.parameter || {};
-    const token = params.token || '';
-    if (token !== API_TOKEN) {
-      return jsonResponse({ ok: false, error: 'Token inválido' }, 401);
+a.stage:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(43,38,31,0.08); }
+a.stage:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+.stage-icon {
+  width: 54px; height: 54px; border-radius: 50%; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; font-size: 23px;
+  margin-bottom: 11px; border: 2px solid var(--border2);
+}
+.s-cria .stage-icon { border-color: var(--green); }
+.s-recria .stage-icon { border-color: var(--clay); }
+.s-engorde .stage-icon { border-color: var(--gold); }
+
+.stage-age { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); font-weight: 600; margin-bottom: 6px; }
+.stage-name { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+.stage-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin: 8px 0 14px; min-height: 34px; }
+
+.stage-cta {
+  font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px; margin-top: auto;
+}
+.s-cria .stage-cta { background: var(--green); color: #fff; }
+.s-engorde .stage-cta { background: var(--gold); color: #fff; }
+a.stage:hover .stage-cta { filter: brightness(1.08); }
+
+.s-recria { opacity: .62; cursor: default; }
+.s-recria .stage-cta { background: var(--clay-bg); color: var(--clay-text); gap: 6px; }
+
+.arrow { align-self: center; color: var(--text3); font-size: 18px; margin-top: 30px; z-index: 1; }
+
+footer { text-align: center; margin-top: 44px; font-size: 11.5px; letter-spacing: .04em; color: var(--text3); }
+
+@media (max-width: 720px) {
+  .cycle { flex-direction: column; }
+  .cycle::before { display: none; }
+  .arrow { transform: rotate(90deg); margin: -4px 0; }
+  .farm-name { font-size: 27px; }
+}
+
+/* ── LOGIN ──────────────────────────────────────────────────────── */
+.login-overlay {
+  position: fixed; inset: 0; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; font-family: var(--sans);
+}
+.login-box {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 18px; padding: 40px 36px; width: 100%; max-width: 380px;
+  box-shadow: 0 8px 32px rgba(43,38,31,0.10);
+}
+.login-icon { font-size: 32px; margin-bottom: 10px; }
+.login-title { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+.login-field { margin-bottom: 14px; }
+.login-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.login-field input {
+  width: 100%; padding: 10px 13px; border: 1px solid var(--border2);
+  border-radius: 9px; font-size: 14px; font-family: var(--sans);
+  background: var(--bg2); color: var(--text); outline: none;
+  transition: border-color .15s;
+}
+.login-field input:focus { border-color: var(--green); background: var(--bg); }
+.login-btn {
+  width: 100%; padding: 11px; background: var(--green); color: #fff;
+  border: none; border-radius: 9px; font-size: 14px; font-weight: 700;
+  font-family: var(--sans); cursor: pointer; margin-top: 6px;
+  transition: background .15s;
+}
+.login-btn:hover { background: var(--green-dark); }
+.login-btn:disabled { opacity: .6; cursor: default; }
+.login-error { font-size: 12.5px; color: #b3261e; margin-top: 10px; text-align: center; min-height: 18px; }
+.login-user-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #a39a89; padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+  cursor: pointer; transition: all .15s; margin-top: 10px;
+}
+.login-user-badge:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+<div class="shell" id="main-shell" style="display:none">
+
+  <div class="hero">
+    <div class="hero-icon">🐄</div>
+    <h1 class="farm-name">Agroganadera Los Médanos</h1>
+    <p class="subtitle">Sistema de gestión del ciclo completo</p>
+  </div>
+
+  <div class="cycle">
+    <a class="stage s-cria" href="https://agroganaderalosmedanos.github.io/cria/">
+      <div class="stage-icon">🐮</div>
+      <div class="stage-age">0 – 8 meses</div>
+      <div class="stage-name">Cría</div>
+      <p class="stage-desc">Servicios, tactos, pariciones, destetes y stock por rodeo.</p>
+      <span class="stage-cta">Entrar →</span>
+    </a>
+
+    <div class="arrow">→</div>
+
+    <div class="stage s-recria">
+      <div class="stage-icon">🐂</div>
+      <div class="stage-age">8 – 12 meses</div>
+      <div class="stage-name">Recría</div>
+      <p class="stage-desc">Seguimiento desde el destete hasta el ingreso a corral.</p>
+      <span class="stage-cta">🔒 Próximamente</span>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <a class="stage s-engorde" href="https://agroganaderalosmedanos.github.io/corrales/">
+      <div class="stage-icon">🌽</div>
+      <div class="stage-age">12+ meses</div>
+      <div class="stage-name">Engorde</div>
+      <p class="stage-desc">Corrales, pesadas, alimentación, ventas y rentabilidad.</p>
+      <span class="stage-cta">Entrar →</span>
+    </a>
+  </div>
+
+  <footer>El Cencerro · El Misterio · El Clavo Chico</footer>
+
+</div>
+
+<script>
+
+const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbz-ahGdifI9FykD0r6hz47fjPZ6H5TwKWMOsCfW5f_M41oXneTffMk7CKz0svOgezSD_w/exec';
+const LOGIN_TOKEN   = 'LosMedanos2026Cria';
+
+function loginGetSession() {
+  try { return JSON.parse(localStorage.getItem('lm_session') || 'null'); } catch(e) { return null; }
+}
+function loginSetSession(data) { localStorage.setItem('lm_session', JSON.stringify(data)); }
+function loginClear() { localStorage.removeItem('lm_session'); location.reload(); }
+
+function loginRequired(onSuccess) {
+  const session = loginGetSession();
+  if (session) { onSuccess(session); return; }
+  showLoginScreen(onSuccess);
+}
+
+function showLoginScreen(onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'login-overlay';
+  overlay.innerHTML = `
+    <div class="login-box">
+      <div class="login-icon">🐄</div>
+      <div class="login-title">Agroganadera Los Médanos</div>
+      <div class="login-sub">Ingresá tus credenciales para continuar</div>
+      <div class="login-field"><label>Usuario</label>
+        <input type="text" id="li-user" placeholder="tu usuario" autocomplete="username">
+      </div>
+      <div class="login-field"><label>Contraseña</label>
+        <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="login-btn" id="li-btn">Ingresar</button>
+      <div class="login-error" id="li-err"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const btn = document.getElementById('li-btn');
+  const userEl = document.getElementById('li-user');
+  const passEl = document.getElementById('li-pass');
+  const errEl  = document.getElementById('li-err');
+  async function doLogin() {
+    const usuario = userEl.value.trim();
+    const password = passEl.value;
+    if (!usuario || !password) { errEl.textContent = 'Completá usuario y contraseña.'; return; }
+    btn.disabled = true; btn.textContent = 'Verificando…'; errEl.textContent = '';
+    try {
+      const url = LOGIN_API_URL + '?action=login&token=' + encodeURIComponent(LOGIN_TOKEN);
+      const res = await fetch(url, { method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ usuario, password }) });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Error al conectar');
+      loginSetSession(json.data);
+      overlay.remove();
+      onSuccess(json.data);
+    } catch(err) {
+      errEl.textContent = err.message;
+      btn.disabled = false; btn.textContent = 'Ingresar';
     }
-
-    const action = params.action || '';
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-    let body = {};
-    if (e.postData && e.postData.contents) {
-      try { body = JSON.parse(e.postData.contents); } catch (err) { body = {}; }
-    }
-
-    const router = {
-      'catalog':   () => getCatalogs(ss),
-      'list':      () => listEntity(ss, params.entity, params),
-      'create':    () => createEntity(ss, body.entity, body.data, body.usuario),
-      'update':    () => updateEntity(ss, body.entity, body.id, body.data, body.usuario),
-      'delete':    () => deleteEntity(ss, body.entity, body.id, body.usuario),
-      'kpis':      () => getKpis(ss, params),
-      'dashboard': () => getDashboard(ss),
-      'stock':     () => getStockTodos(ss),
-      'login':     () => loginUsuario(ss, body.usuario, body.password),
-    };
-
-    if (!router[action]) {
-      return jsonResponse({ ok: false, error: 'Acción desconocida: ' + action }, 400);
-    }
-    const result = router[action]();
-    return jsonResponse({ ok: true, data: result });
-
-  } catch (err) {
-    return jsonResponse({ ok: false, error: err.message, stack: err.stack }, 500);
   }
+  btn.onclick = doLogin;
+  passEl.onkeydown = e => { if (e.key === 'Enter') doLogin(); };
+  userEl.onkeydown = e => { if (e.key === 'Enter') passEl.focus(); };
+  setTimeout(() => userEl.focus(), 100);
 }
-
-function jsonResponse(obj, code) {
-  const out = ContentService.createTextOutput(JSON.stringify(obj));
-  out.setMimeType(ContentService.MimeType.JSON);
-  return out;
-}
-
-// ── LOGIN ─────────────────────────────────────────────────────────────────
-function loginUsuario(ss, usuario, password) {
-  if (!usuario || !password) throw new Error('Usuario y contraseña requeridos');
-  const usuarios = sheetToObjects_(ss, 'Usuarios', ['usuario_id', 'nombre', 'usuario', 'password', 'rol', 'activo']);
-  const match = usuarios.find(u =>
-    String(u.usuario).toLowerCase() === String(usuario).toLowerCase() &&
-    String(u.password) === String(password) &&
-    String(u.activo).toUpperCase() === 'TRUE'
-  );
-  if (!match) throw new Error('Usuario o contraseña incorrectos');
-  grabarLog_(ss, match.usuario, 'login', 'ingreso', 'Login exitoso — ' + match.nombre + ' (' + match.rol + ')');
-  return { usuario_id: match.usuario_id, nombre: match.nombre, usuario: match.usuario, rol: match.rol };
-}
-
-// ── LOG DE CAMBIOS ────────────────────────────────────────────────────────
-function grabarLog_(ss, usuario, app, accion, detalle) {
-  try {
-    const sheet = ss.getSheetByName('Log');
-    if (!sheet) return;
-    const id = sheet.getLastRow(); // ID incremental
-    const fecha = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm:ss');
-    sheet.appendRow([id, fecha, usuario || 'sistema', app || 'cria', accion, detalle]);
-  } catch (e) {
-    // El log nunca debe romper la operación principal
-  }
-}
-
-// ── DEFINICIÓN DE ENTIDADES ──────────────────────────────────────────────
-const ENTITIES = {
-  servicios: {
-    sheet: 'Servicios',
-    cols: ['servicio_id','tipo','rodeo_id','campo_id','fecha_inicio','fecha_fin','identificacion_toro','cantidad','observacion'],
-    idCol: 'servicio_id',
-  },
-  toros_rodeo: {
-    sheet: 'Toros por Rodeo',
-    cols: ['id', 'servicio_id', 'caravana_toro', 'fecha_entrada', 'fecha_salida', 'observacion'],
-    idCol: 'id',
-  },
-  tactos: {
-    sheet: 'Tactos',
-    cols: ['tacto_id', 'fecha', 'rodeo_id', 'tipo_tacto', 'total_tacteadas', 'prenadas', 'vacias', 'observacion'],
-    idCol: 'tacto_id',
-  },
-  abortos: {
-    sheet: 'Abortos',
-    cols: ['aborto_id', 'fecha', 'rodeo_id', 'caravana_vaca', 'observacion'],
-    idCol: 'aborto_id',
-  },
-  pariciones: {
-    sheet: 'Pariciones',
-    cols: ['paricion_id', 'fecha', 'rodeo_id', 'nacidos_vivos', 'nacidos_muertos', 'observacion'],
-    idCol: 'paricion_id',
-  },
-  destetes: {
-    sheet: 'Destetes',
-    cols: ['destete_id', 'fecha', 'rodeo_id', 'machos', 'hembras', 'total', 'peso_prom_kg', 'observacion'],
-    idCol: 'destete_id',
-  },
-  mortandad: {
-    sheet: 'Mortandad',
-    cols: ['mortandad_id', 'fecha', 'rodeo_id', 'caravana_ternero', 'cantidad', 'observacion'],
-    idCol: 'mortandad_id',
-  },
-  ventas: {
-    sheet: 'Ventas',
-    cols: ['venta_id', 'fecha_salida', 'rodeo_id', 'campo_id', 'comprador', 'tipo_venta', 'cant_animales',
-           'peso_campo_kg', 'precio_pactado', 'observaciones', 'estado', 'kg_vivos_frigorifico',
-           'rinde_pct', 'precio_proporcional_kg', 'importe_total'],
-    idCol: 'venta_id',
-  },
-  movimientos: {
-    sheet: 'Movimientos',
-    cols: ['movimiento_id', 'tipo', 'caravana', 'fecha', 'campo_origen_id', 'campo_destino_id', 'rodeo_origen_id', 'rodeo_destino_id', 'cantidad', 'observaciones'],
-    idCol: 'movimiento_id',
-  },
-};
-
-// ── CRUD GENÉRICO ────────────────────────────────────────────────────────
-function getSheetData_(ss, sheetName) {
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) throw new Error('Hoja no encontrada: ' + sheetName);
-  const range = sheet.getDataRange();
-  const values = range.getValues();
-  return { sheet, values };
-}
-
-function rowToObject_(headers, row) {
-  const obj = {};
-  headers.forEach((h, i) => {
-    let v = row[i];
-    if (v instanceof Date) {
-      v = Utilities.formatDate(v, 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd');
+window.addEventListener('DOMContentLoaded', () => {
+  loginRequired(session => {
+    window.__lmSession = session;
+    const shell = document.getElementById('main-shell');
+    if (shell) shell.style.display = '';
+    // Badge de usuario en el footer
+    const footer = document.querySelector('footer');
+    if (footer && !footer.querySelector('.login-user-badge')) {
+      footer.insertAdjacentHTML('beforeend',
+        '<div style="margin-top:10px"><span class="login-user-badge" onclick="loginClear()">👤 ' + session.nombre + ' &nbsp;·&nbsp; Cerrar sesión</span></div>');
     }
-    obj[h] = v;
   });
-  return obj;
-}
-
-function listEntity(ss, entityName, params) {
-  const def = ENTITIES[entityName];
-  if (!def) throw new Error('Entidad desconocida: ' + entityName);
-  const { values } = getSheetData_(ss, def.sheet);
-  const headers = values[0];
-  const rows = values.slice(1).filter(r => r.some(c => c !== '' && c !== null));
-  let result = rows.map(r => rowToObject_(headers, r));
-
-  if (params.rodeo_id) {
-    result = result.filter(r => String(r.rodeo_id) === String(params.rodeo_id));
-  }
-  const fechaCol = headers.find(h => h === 'fecha' || h === 'fecha_inicio' || h === 'fecha_salida');
-  if (fechaCol) {
-    result.sort((a, b) => String(b[fechaCol]).localeCompare(String(a[fechaCol])));
-  }
-  return result;
-}
-
-function createEntity(ss, entityName, data, usuario) {
-  const def = ENTITIES[entityName];
-  if (!def) throw new Error('Entidad desconocida: ' + entityName);
-
-  if (entityName === 'movimientos' && data.caravana && !data.cantidad) {
-    data.cantidad = 1;
-  }
-
-  // Validaciones de negocio
-  if (entityName === 'movimientos' && data.tipo !== 'Saldo inicial' && data.rodeo_origen_id) {
-    const stockOrigen = getStockRodeo_(ss, data.rodeo_origen_id);
-    if (Number(data.cantidad) > stockOrigen) {
-      throw new Error('El rodeo de origen tiene ' + stockOrigen + ' animales. No se pueden mover ' + data.cantidad + '.');
-    }
-  }
-  if (entityName === 'tactos' && data.rodeo_id) {
-    if (!rodeoTuvoServicio_(ss, data.rodeo_id)) {
-      throw new Error('Este rodeo no tiene ningún Servicio registrado. Cargá el servicio antes de tactar.');
-    }
-    const stock = getStockRodeo_(ss, data.rodeo_id);
-    if (Number(data.total_tacteadas) > stock) {
-      throw new Error('El rodeo tiene ' + stock + ' animales actualmente. No se pueden tactar ' + data.total_tacteadas + '.');
-    }
-  }
-  if (entityName === 'abortos' && data.rodeo_id) {
-    if (!rodeoTuvoServicio_(ss, data.rodeo_id)) {
-      throw new Error('Este rodeo no tiene ningún Servicio registrado. No puede haber abortos sin servicio previo.');
-    }
-  }
-  if (entityName === 'pariciones' && data.rodeo_id) {
-    const prenadas = getPrenadasDisponibles_(ss, data.rodeo_id);
-    if (prenadas <= 0) {
-      throw new Error('Este rodeo no tiene preñadas confirmadas por tacto. Cargá el tacto antes de registrar la parición.');
-    }
-    const totalParicion = (Number(data.nacidos_vivos) || 0) + (Number(data.nacidos_muertos) || 0);
-    if (totalParicion > prenadas) {
-      throw new Error('El rodeo tiene ' + prenadas + ' preñadas confirmadas por tacto. No pueden nacer ' + totalParicion + ' (vivos + muertos).');
-    }
-  }
-
-  const sheet = ss.getSheetByName(def.sheet);
-  if (!sheet) throw new Error('Hoja no encontrada: ' + def.sheet);
-
-  const newId = sheet.getLastRow();
-  const row = def.cols.map(c => {
-    if (c === def.idCol) return newId;
-    return data[c] !== undefined ? data[c] : '';
-  });
-  sheet.appendRow(row);
-
-  // Log
-  grabarLog_(ss, usuario, 'cria', 'crear', entityName + ' id=' + newId + ' | ' + JSON.stringify(data));
-
-  return { id: newId, entity: entityName };
-}
-
-function updateEntity(ss, entityName, id, data, usuario) {
-  const def = ENTITIES[entityName];
-  if (!def) throw new Error('Entidad desconocida: ' + entityName);
-  const { sheet, values } = getSheetData_(ss, def.sheet);
-  const headers = values[0];
-  const idColIdx = headers.indexOf(def.idCol);
-  if (idColIdx === -1) throw new Error('Columna ID no encontrada: ' + def.idCol);
-
-  for (let i = 1; i < values.length; i++) {
-    if (String(values[i][idColIdx]) === String(id)) {
-      def.cols.forEach((c, colIdx) => {
-        if (c === def.idCol) return;
-        if (data[c] !== undefined) {
-          sheet.getRange(i + 1, colIdx + 1).setValue(data[c]);
-        }
-      });
-      grabarLog_(ss, usuario, 'cria', 'editar', entityName + ' id=' + id + ' | ' + JSON.stringify(data));
-      return { id, entity: entityName, updated: true };
-    }
-  }
-  throw new Error('No se encontró ' + entityName + ' con id ' + id);
-}
-
-function deleteEntity(ss, entityName, id, usuario) {
-  const def = ENTITIES[entityName];
-  if (!def) throw new Error('Entidad desconocida: ' + entityName);
-  const { sheet, values } = getSheetData_(ss, def.sheet);
-  const headers = values[0];
-  const idColIdx = headers.indexOf(def.idCol);
-
-  for (let i = 1; i < values.length; i++) {
-    if (String(values[i][idColIdx]) === String(id)) {
-      sheet.deleteRow(i + 1);
-      grabarLog_(ss, usuario, 'cria', 'eliminar', entityName + ' id=' + id);
-      return { id, entity: entityName, deleted: true };
-    }
-  }
-  throw new Error('No se encontró ' + entityName + ' con id ' + id);
-}
-
-// ── CATÁLOGOS ──────────────────────────────────────────────────────────────
-function getCatalogs(ss) {
-  const rodeos = sheetToObjects_(ss, 'Rodeos', ['rodeo_id', 'nombre', 'campo_id', 'categoria', 'activo']);
-  const campos = sheetToObjects_(ss, 'Campos', ['campo_id', 'nombre', 'tipo']);
-  const compradores = sheetToObjects_(ss, 'Compradores', ['comprador_id', 'nombre', 'tipo']);
-  return { rodeos, campos, compradores };
-}
-
-function sheetToObjects_(ss, sheetName, headers) {
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return [];
-  const values = sheet.getDataRange().getValues();
-  const rows = values.slice(1).filter(r => r.some(c => c !== '' && c !== null));
-  return rows.map(r => rowToObject_(headers, r));
-}
-
-// ── KPIs ──────────────────────────────────────────────────────────────────
-function getKpis(ss, params) {
-  const datos = {
-    tactos: sheetToObjects_(ss, 'Tactos', ['tacto_id', 'fecha', 'rodeo_id', 'tipo_tacto', 'total_tacteadas', 'prenadas', 'vacias', 'observacion']),
-    pariciones: sheetToObjects_(ss, 'Pariciones', ['paricion_id', 'fecha', 'rodeo_id', 'nacidos_vivos', 'nacidos_muertos', 'observacion']),
-    destetes: sheetToObjects_(ss, 'Destetes', ['destete_id', 'fecha', 'rodeo_id', 'machos', 'hembras', 'total', 'peso_prom_kg', 'observacion']),
-    abortos: sheetToObjects_(ss, 'Abortos', ['aborto_id', 'fecha', 'rodeo_id', 'caravana_vaca', 'observacion']),
-    mortandad: sheetToObjects_(ss, 'Mortandad', ['mortandad_id', 'fecha', 'rodeo_id', 'caravana_ternero', 'cantidad', 'observacion']),
-  };
-  return calcKpisFromData_(datos, params.rodeo_id || null);
-}
-
-function calcKpisFromData_(datos, rodeoFiltro) {
-  function porRodeo(arr) {
-    return rodeoFiltro ? arr.filter(x => String(x.rodeo_id) === String(rodeoFiltro)) : arr;
-  }
-  const tactosF = porRodeo(datos.tactos);
-  const tactoIatf = tactosF.filter(t => t.tipo_tacto === 'Tacto IATF');
-  const tactoFinal = tactosF.filter(t => t.tipo_tacto === 'Tacto final');
-  const totalTacteadasIatf = sum_(tactoIatf, 'total_tacteadas');
-  const prenadasIatf = sum_(tactoIatf, 'prenadas');
-  const totalTacteadasFinal = sum_(tactoFinal, 'total_tacteadas');
-  const prenadasFinalTotal = sum_(tactoFinal, 'prenadas');
-  const prenadasToro = Math.max(0, prenadasFinalTotal - prenadasIatf);
-  const totalPrenadas = prenadasFinalTotal > 0 ? prenadasFinalTotal : prenadasIatf;
-  const totalServiciadas = totalTacteadasFinal > 0 ? totalTacteadasFinal : totalTacteadasIatf;
-  const pariF = porRodeo(datos.pariciones);
-  const nacidosVivos = sum_(pariF, 'nacidos_vivos');
-  const nacidosMuertos = sum_(pariF, 'nacidos_muertos');
-  const destF = porRodeo(datos.destetes);
-  const totalDestetados = sum_(destF, 'total');
-  const abortosF = porRodeo(datos.abortos).length;
-  const mortF = sum_(porRodeo(datos.mortandad), 'cantidad');
-  const indicePrenez = totalServiciadas > 0 ? (totalPrenadas / totalServiciadas * 100) : null;
-  const indicePrenezIatf = totalTacteadasIatf > 0 ? (prenadasIatf / totalTacteadasIatf * 100) : null;
-  const indicePrenezToro = (totalTacteadasFinal - totalTacteadasIatf) > 0
-    ? (prenadasToro / Math.max(1, totalTacteadasFinal - prenadasIatf) * 100) : null;
-  const indiceParicion = totalPrenadas > 0 ? (nacidosVivos / totalPrenadas * 100) : null;
-  const indiceDestete = nacidosVivos > 0 ? (totalDestetados / nacidosVivos * 100) : null;
-  return {
-    rodeo_id: rodeoFiltro,
-    servicio: { total_serviciadas: totalServiciadas, prenadas_iatf: prenadasIatf, prenadas_toro: prenadasToro, total_prenadas: totalPrenadas, indice_prenez: round1_(indicePrenez), indice_prenez_iatf: round1_(indicePrenezIatf), indice_prenez_toro: round1_(indicePrenezToro) },
-    gestacion: { abortos: abortosF },
-    paricion: { nacidos_vivos: nacidosVivos, nacidos_muertos: nacidosMuertos, indice_paricion: round1_(indiceParicion) },
-    destete: { total_destetados: totalDestetados, mortandad_terneros: mortF, indice_destete: round1_(indiceDestete) },
-  };
-}
-
-function sum_(arr, key) { return arr.reduce((s, x) => s + (Number(x[key]) || 0), 0); }
-function round1_(n) { return n === null || n === undefined || isNaN(n) ? null : Math.round(n * 10) / 10; }
-
-// ── DASHBOARD ─────────────────────────────────────────────────────────────
-function getDashboard(ss) {
-  const datos = {
-    tactos: sheetToObjects_(ss, 'Tactos', ['tacto_id', 'fecha', 'rodeo_id', 'tipo_tacto', 'total_tacteadas', 'prenadas', 'vacias', 'observacion']),
-    pariciones: sheetToObjects_(ss, 'Pariciones', ['paricion_id', 'fecha', 'rodeo_id', 'nacidos_vivos', 'nacidos_muertos', 'observacion']),
-    destetes: sheetToObjects_(ss, 'Destetes', ['destete_id', 'fecha', 'rodeo_id', 'machos', 'hembras', 'total', 'peso_prom_kg', 'observacion']),
-    abortos: sheetToObjects_(ss, 'Abortos', ['aborto_id', 'fecha', 'rodeo_id', 'caravana_vaca', 'observacion']),
-    mortandad: sheetToObjects_(ss, 'Mortandad', ['mortandad_id', 'fecha', 'rodeo_id', 'caravana_ternero', 'cantidad', 'observacion']),
-  };
-  const rodeos = sheetToObjects_(ss, 'Rodeos', ['rodeo_id', 'nombre', 'campo_id', 'categoria', 'activo'])
-    .filter(r => r.categoria === 'vaca' || r.categoria === 'vaquillona');
-  const porRodeo = rodeos.map(r => ({ rodeo: r, kpis: calcKpisFromData_(datos, r.rodeo_id) }));
-  const general = calcKpisFromData_(datos, null);
-  return { rodeos: porRodeo, general };
-}
-
-// ── STOCK ─────────────────────────────────────────────────────────────────
-const MOVIMIENTOS_COLS = ['movimiento_id', 'tipo', 'caravana', 'fecha', 'campo_origen_id', 'campo_destino_id', 'rodeo_origen_id', 'rodeo_destino_id', 'cantidad', 'observaciones'];
-
-function getStockRodeo_(ss, rodeoId) {
-  const movs = sheetToObjects_(ss, 'Movimientos', MOVIMIENTOS_COLS);
-  let stock = 0;
-  movs.forEach(m => {
-    const cant = Number(m.cantidad) || 0;
-    if (String(m.rodeo_destino_id) === String(rodeoId)) stock += cant;
-    if (String(m.rodeo_origen_id) === String(rodeoId) && m.tipo !== 'Saldo inicial') stock -= cant;
-  });
-  return stock;
-}
-
-function getStockTodos(ss) {
-  const rodeos = sheetToObjects_(ss, 'Rodeos', ['rodeo_id', 'nombre', 'campo_id', 'categoria', 'activo']);
-  const movs = sheetToObjects_(ss, 'Movimientos', MOVIMIENTOS_COLS);
-  const stockMap = {};
-  rodeos.forEach(r => { stockMap[r.rodeo_id] = 0; });
-  movs.forEach(m => {
-    const cant = Number(m.cantidad) || 0;
-    if (stockMap[m.rodeo_destino_id] !== undefined) stockMap[m.rodeo_destino_id] += cant;
-    if (m.tipo !== 'Saldo inicial' && stockMap[m.rodeo_origen_id] !== undefined) stockMap[m.rodeo_origen_id] -= cant;
-  });
-  return rodeos.map(r => ({ rodeo_id: r.rodeo_id, nombre: r.nombre, campo_id: r.campo_id, categoria: r.categoria, stock: stockMap[r.rodeo_id] || 0 }));
-}
-
-// ── VALIDACIONES ──────────────────────────────────────────────────────────
-function rodeoTuvoServicio_(ss, rodeoId) {
-  const servicios = sheetToObjects_(ss, 'Servicios', ['servicio_id', 'fecha_inicio', 'fecha_fin', 'tipo', 'rodeo_id', 'caravana_vaca', 'identificacion_toro', 'observacion']);
-  return servicios.some(s => String(s.rodeo_id) === String(rodeoId));
-}
-
-function getPrenadasDisponibles_(ss, rodeoId) {
-  const tactos = sheetToObjects_(ss, 'Tactos', ['tacto_id', 'fecha', 'rodeo_id', 'tipo_tacto', 'total_tacteadas', 'prenadas', 'vacias', 'observacion']);
-  const pariciones = sheetToObjects_(ss, 'Pariciones', ['paricion_id', 'fecha', 'rodeo_id', 'nacidos_vivos', 'nacidos_muertos', 'observacion']);
-  const tactosRodeo = tactos.filter(t => String(t.rodeo_id) === String(rodeoId));
-  const tactoFinal = tactosRodeo.filter(t => t.tipo_tacto === 'Tacto final');
-  const tactoIatf = tactosRodeo.filter(t => t.tipo_tacto === 'Tacto IATF');
-  const totalPrenadasTacto = tactoFinal.length ? sum_(tactoFinal, 'prenadas') : sum_(tactoIatf, 'prenadas');
-  const pariRodeo = pariciones.filter(p => String(p.rodeo_id) === String(rodeoId));
-  const yaNacidos = pariRodeo.reduce((s, p) => s + (Number(p.nacidos_vivos) || 0) + (Number(p.nacidos_muertos) || 0), 0);
-  return Math.max(0, totalPrenadasTacto - yaNacidos);
-}
+});
+</script>
+</body>
+</html>
